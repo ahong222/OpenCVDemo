@@ -1,0 +1,45 @@
+opencv 使用方法一
+    在java中使用opencv，参考OpenCVDemo工程
+1.使用libopencv_java3.so + openCVLibrary java库，则可以在java代码中使用opencv的接口和相关类
+工程配置：
+1.新建一个工程，或者使用已有的工程
+2.new->folder->jni folder,通过这种方式创建的会在build.gradle 中增加sourceSets { main { jni.srcDirs = ['src/main/jni', 'src/main/jniLibs/'] } }
+3.下载opencv sdk for android,解压后将 sdk\native\libs中的armeabi等文件夹按需拷贝到jniLibs目录
+4.引用opencv java sdk工程。将sdk\java 目录作为import module 添加到工程
+5.现在可以在java代码中使用opencv了
+    i:初始化：OpenCVLoader.initDebug()
+    ii:将图片转化成灰度图片的示例
+    public void procSrc2Gray() {
+            Mat rgbMat = new Mat();
+            Mat grayMat = new Mat();
+            srcBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.genie);
+            grayBitmap = Bitmap.createBitmap(srcBitmap.getWidth(), srcBitmap.getHeight(), Bitmap.Config.RGB_565);
+            Utils.bitmapToMat(srcBitmap, rgbMat);//convert original bitmap to Mat, R G B.
+            Imgproc.cvtColor(rgbMat, grayMat, Imgproc.COLOR_RGB2GRAY);//rgbMat to gray grayMat
+            Utils.matToBitmap(grayMat, grayBitmap); //convert mat to bitmap
+            Log.i(TAG, "procSrc2Gray sucess...");
+    }
+
+使用方法二，参考customopencv工程
+    在c++中调用opencv，然后编译成so
+1.在src/main/下新建jni目录，或者用android studio新建 folder->jni folder
+2.新建Android.mk 和 Application.mk，内存参找customopencv工程，其中有路径和包名相关的需要替换
+3.新建jni java接口类
+package com.ifnoif.jni;
+/**
+ * Created by syh on 2016/11/21.
+ */
+
+public class OpenCVHelper {
+    static {
+        System.loadLibrary("OpenCV");
+    }
+    public static native int[] gray(int[] buf, int w, int h);
+}
+
+4.使用javah，生成.h文件，放在jni目录
+5.编写cpp.
+6.更新Android.mk，修改源文件配置 LOCAL_SRC_FILES := com_ifnoif_jni_OpenCVHelper.cpp
+7.修改build.gradle,增加ndkBuild, 和ndkClean,参考build.gradle中//+++++++++++++++++++++++NDK 配置 +++++++++++++++++++++++//部分
+8.执行ndkBuild task,会在src\main\libs目录生成libOpenCV.so
+9.可以直接运行也可以将so拷贝到其他工程使用
